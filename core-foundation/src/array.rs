@@ -14,6 +14,7 @@ pub use core_foundation_sys::base::{CFIndex, CFRelease};
 use core_foundation_sys::base::{CFTypeRef, kCFAllocatorDefault};
 use libc::c_void;
 use std::mem;
+use std::ptr;
 
 use base::{CFIndexConvertible, TCFType, CFRange};
 
@@ -59,6 +60,21 @@ impl CFArray {
                                           elems.len().to_CFIndex(),
                                           &kCFTypeArrayCallBacks);
             TCFType::wrap_under_create_rule(array_ref)
+        }
+    }
+
+    /// Creates a new `CFArray` with a given custom elements.
+    pub fn from_custom_data(elems: &[*const c_void]) -> Result<CFArray, ()> {
+        let array_ref = unsafe {
+            CFArrayCreate(kCFAllocatorDefault,
+                          elems.as_ptr(),
+                          elems.len().to_CFIndex(),
+                          ptr::null())
+        };
+        if array_ref == ptr::null() {
+            Err(())
+        } else {
+            Ok(unsafe { TCFType::wrap_under_create_rule(array_ref) })
         }
     }
 
